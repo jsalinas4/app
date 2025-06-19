@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'reconocimiento.dart';
 import 'registro.dart';
+import 'estudiantes.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -20,6 +21,7 @@ class _MenuAppState extends State<MenuApp> {
   final List<Widget> _paginas = [
     ReconocimientoVista(),
     RegistroVista(),
+    EstudiantesVista(),
   ];
 
   void _onItemTapped(int index) {
@@ -44,6 +46,10 @@ class _MenuAppState extends State<MenuApp> {
           BottomNavigationBarItem(
             icon: Icon(Icons.camera_alt),
             label: 'Registrar',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'Estudiantes',
           ),
         ],
       ),

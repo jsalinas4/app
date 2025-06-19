@@ -16,9 +16,9 @@ class _ReconocimientoVistaState extends State<ReconocimientoVista> {
   String resultado = "Selecciona una imagen para identificar.";
   File? imagen;
 
-  Future<void> seleccionarYEnviarImagen() async {
+  Future<void> seleccionarYEnviarImagen({required ImageSource origen}) async {
     final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await picker.pickImage(source: origen);
 
     if (pickedFile == null) return;
 
@@ -30,7 +30,7 @@ class _ReconocimientoVistaState extends State<ReconocimientoVista> {
       resultado = "Procesando imagen...";
     });
 
-    final uri = Uri.parse("https://mainly-brave-caribou.ngrok-free.app/reconocer"); // cambia esto
+    final uri = Uri.parse("https://mainly-brave-caribou.ngrok-free.app/reconocer");
     final request = http.MultipartRequest('POST', uri)
       ..files.add(await http.MultipartFile.fromPath('imagen', resizedImage.path));
 
@@ -40,17 +40,45 @@ class _ReconocimientoVistaState extends State<ReconocimientoVista> {
 
       if (response.statusCode == 200) {
         final data = json.decode(respStr);
-        setState(() {
-          resultado = data["status"] == "identificado"
-              ? "Estudiante: ${data["nombres"]} ${data["apellidos"]}\nID: ${data["id_estudiante"]}\nCorreo: ${data["correo"]}\nRequisitoriado: ${data["requisitoriado"]}"
-              : "No identificado.";
-        });
+
+        if (data["status"] == "identificado") {
+          bool requisitoriado = data["requisitoriado"] == true;
+
+          setState(() {
+            resultado = "Estudiante: ${data["nombres"]} ${data["apellidos"]}\n"
+                "ID: ${data["id_estudiante"]}\n"
+                "Correo: ${data["correo"]}\n"
+                "Requisitoriado: ${requisitoriado ? 'Sí' : 'No'}";
+          });
+
+          if (requisitoriado) {
+            _mostrarAlertaRequisitoriado(context, data);
+          }
+        } else {
+          setState(() => resultado = "No identificado.");
+        }
       } else {
-        setState(() => resultado = "Error del servidor: $respStr");
+        setState(() => resultado = "Error del servidor");
       }
     } catch (e) {
-      setState(() => resultado = "Error al conectar: $e");
+      setState(() => resultado = "Error al conectar");
     }
+  }
+
+  Future<void> _mostrarAlertaRequisitoriado(BuildContext context, Map data) async {
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text("¡Alerta!"),
+        content: Text("El estudiante ${data["nombres"]} ${data["apellidos"]} está requisitoriado."),
+        actions: [
+          TextButton(
+            child: Text("Cerrar"),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<File> _optimizarImagen(File file) async {
@@ -82,9 +110,16 @@ class _ReconocimientoVistaState extends State<ReconocimientoVista> {
                 ? Image.file(imagen!, height: 200)
                 : Container(height: 200, color: Colors.grey[300]),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: seleccionarYEnviarImagen,
-              child: Text("Seleccionar imagen y enviar"),
+            ElevatedButton.icon(
+              icon: Icon(Icons.photo),
+              label: Text("Seleccionar desde galería"),
+              onPressed: () => seleccionarYEnviarImagen(origen: ImageSource.gallery),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton.icon(
+              icon: Icon(Icons.camera_alt),
+              label: Text("Tomar foto con cámara"),
+              onPressed: () => seleccionarYEnviarImagen(origen: ImageSource.camera),
             ),
             SizedBox(height: 20),
             Text(resultado, textAlign: TextAlign.center),

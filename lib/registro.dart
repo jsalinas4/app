@@ -72,7 +72,7 @@ class _RegistroVistaState extends State<RegistroVista> {
       _mensaje = "";
     });
 
-    final uri = Uri.parse("https://mainly-brave-caribou.ngrok-free.app/registrar"); // Cambia aquí
+    final uri = Uri.parse("https://mainly-brave-caribou.ngrok-free.app/registrar");
 
     var request = http.MultipartRequest('POST', uri);
     request.fields['id_estudiante'] = _idController.text.trim();
@@ -93,12 +93,12 @@ class _RegistroVistaState extends State<RegistroVista> {
         });
       } else {
         setState(() {
-          _mensaje = "Error del servidor: $respStr";
+          _mensaje = "Error del servidor";
         });
       }
     } catch (e) {
       setState(() {
-        _mensaje = "Error al conectar: $e";
+        _mensaje = "Error al conectar";
       });
     } finally {
       setState(() {
